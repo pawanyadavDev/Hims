@@ -1,0 +1,9 @@
+# Used by Render (backend web service). Build context is the repository root so the SQL files can be included.
+FROM node:20-alpine
+WORKDIR /app
+COPY backend/package.json ./
+RUN npm install --omit=dev
+COPY backend/src ./src
+COPY database ./database
+# migrate.js applies the database schema on first start (only when MANAGED_DB=true), then the API starts.
+CMD ["sh", "-c", "node src/migrate.js && node src/index.js"]
