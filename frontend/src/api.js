@@ -6,7 +6,7 @@ export const session = {
 };
 
 export async function api(path, options = {}) {
-  const res = await fetch(`/api/v1${path}`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/v1${path}`, {
     ...options,
     headers: { 'Content-Type': 'application/json', ...(session.token && { Authorization: `Bearer ${session.token}` }) },
     body: options.body ? JSON.stringify(options.body) : undefined,

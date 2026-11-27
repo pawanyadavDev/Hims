@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { pool } from './db.js';
 import { authenticate, requireRole, requireTenant } from './middleware/auth.js';
 import auth from './routes/auth.js';
 import hospitals from './routes/hospitals.js';
@@ -19,7 +20,12 @@ import reports from './routes/reports.js';
 
 if (!process.env.JWT_SECRET || !process.env.DATABASE_URL) throw new Error('JWT_SECRET and DATABASE_URL must be set.');
 
+// Tenant isolation relies on row-level security. A superuser (or BYPASSRLS) database user would skip it, so refuse to start.
+const { rows: roleRows } = await pool.query('SELECT (rolsuper OR rolbypassrls) AS bypass FROM pg_roles WHERE rolname = current_user');
+if (roleRows[0]?.bypass) throw new Error('The database user bypasses row-level security. Use a normal (non-superuser) database user.');
+
 const app = express();
+app.set('trust proxy', 1);   // running behind a hosting proxy (Render); needed for correct client IPs
 app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));

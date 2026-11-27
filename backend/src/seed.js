@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { pool, withTenant } from './db.js';
 
 const hash = (p) => bcrypt.hash(p, 10);
+const PASSWORD = process.env.SEED_PASSWORD || 'Password@123';
 const hospital = (await pool.query(
   `INSERT INTO hospitals (name, code) VALUES ('City Care Hospital','citycare')
    ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name RETURNING id`)).rows[0];
@@ -20,7 +21,7 @@ const users = [
 for (const [hid, name, email, role] of users)
   await pool.query(
     `INSERT INTO users (hospital_id, name, email, password_hash, role) VALUES ($1,$2,$3,$4,$5)
-     ON CONFLICT (email) DO NOTHING`, [hid, name, email, await hash('Password@123'), role]);
+     ON CONFLICT (email) DO NOTHING`, [hid, name, email, await hash(PASSWORD), role]);
 
 // Medicines (Cetirizine starts below its reorder level on purpose).
 const meds = [

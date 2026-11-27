@@ -86,3 +86,14 @@ cd frontend && npm install && npm run dev        # http://localhost:5173, proxie
 - Add input-validation (e.g. Zod), refresh tokens, 2FA for admins, and automated tests (none are included yet).
 - Review compliance: India's DPDP Act, ABDM/ABHA integration, data retention.
 - Not included: patient portal, telemedicine, insurance/TPA claims, HR/payroll (see the project document for the roadmap).
+
+## Deploy on Render (demo or small clinic)
+
+1. **PostgreSQL:** Render > New > PostgreSQL (note: the free plan expires after 30 days and has no backups, so use a paid plan for real data). Copy its *Internal Database URL*.
+2. **Backend:** New > Web Service > this repo > Language *Docker* > Dockerfile path `./Dockerfile.render` > same region as the database.
+   Environment: `DATABASE_URL` (internal URL), `JWT_SECRET` (long random text), `MANAGED_DB=true`, `RUN_SEED=true` (first deploy only), `SEED_PASSWORD` (a strong password for the demo users).
+3. **Frontend:** New > Static Site > this repo > Root directory `frontend` > Build `npm install && npm run build` > Publish `dist`.
+   Environment: `VITE_API_URL` = the backend's https URL (no trailing slash). Redirects/Rewrites: `/*` to `/index.html` (Rewrite).
+4. After the first successful deploy, remove `RUN_SEED` from the backend and redeploy.
+
+The backend applies the database schema by itself on start (`backend/src/migrate.js`) and refuses to start if the database user could bypass row-level security.
